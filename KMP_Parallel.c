@@ -11,20 +11,9 @@ Description: Implementing an algorithm that will look for a set of strings insid
 #include <malloc.h>
 #include <mpi.h>
 
-int main()
+void computeLPSArray(char* pat, int M, int* lps)
 {
-    
-    char txt[] = "abcabcdebcdefgtabishganababceabeevadaaaabcdeabcdebcdefgtabishganababceabeevadaaabcdefgtabishganababceabeevadaaadebcdefgtabishganababceabeevadaaaabcdeabcdebcdefgtabishganababceabeevadaaabcdefgtabishganababceabeevadaaa";
-    char pat[] = "abc";
-    
-    
-  /*############################################################################################
-    # Definizione Del LPS                                                                      #
-    ############################################################################################*/
-    int M = strlen(pat);
-
-    int lps[M];
-
+    // length of the previous longest prefix suffix
     int len = 0;
   
     lps[0] = 0; // lps[0] is always 0
@@ -39,10 +28,14 @@ int main()
         }
         else // (pat[i] != pat[len])
         {
-            
-            if (len != 0)
-            {
+            // This is tricky. Consider the example.
+            // AAACAAAA and i = 7. The idea is similar
+            // to search step.
+            if (len != 0) {
                 len = lps[len - 1];
+  
+                // Also, note that we do not increment
+                // i here
             }
             else // if (len == 0)
             {
@@ -51,41 +44,59 @@ int main()
             }
         }
     }
+}
+
+int main()
+{
+  /*############################################################################################
+    # Definizione Del LPS                                                                      #
+    ############################################################################################*/
 
     MPI_Init(NULL, NULL);
         //char pattern_to_find = patterns[i];
         // Get the number of processes
-    int world_size;
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    int cores;
+    MPI_Comm_size(MPI_COMM_WORLD, &cores);
     // Get the rank of the process
-    int world_rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+    int core_number;
+    MPI_Comm_rank(MPI_COMM_WORLD, &core_number);
     
     
-    //padding the txt for separation
-    int N = strlen(txt);
-    int cores = world_size;
-    //printf("%d\n", N);
-    int newN = N;
-    while(newN%cores != 0)
-    {
-        newN++;
-    }
-    //printf("%d\n", newN);
-
-    char padded_txt[newN];
-    strcpy(padded_txt, txt);
-
-    for(int v = N; v<newN; v++)
-    {
-        padded_txt[v] = '$';
-    }
-
-    int newN_chunk = newN/cores;
-
     //define last core
-    if(world_rank == world_size-1)
+    if(core_number == 0)
     {
+
+        char txt[] = "abcabcdebcdefgtabishganababceabeevadaaaabcdeabcdebcdefgtabishganababceabeevadaaabcdefgtabishganababceabeevadaaadebcdefgtabishganababceabeevadaaaabcdeabcdebcdefgtabishganababceabeevadaaabcdefgtabishganababceabeevadaaa";
+        char pat[] = "abc";
+        int M = strlen(pat);
+        int lps[M];
+        computeLPSArray(pat, M, lps);
+        printf("process %d, number %d", core_number, M);
+        for(int k = 1; k<cores; k++)
+            {
+                MPI_Send(&M, 1, MPI_INT, k, 0, MPI_COMM_WORLD);
+                MPI_Send(&lps, M, MPI_INT, k, 0, MPI_COMM_WORLD);
+            }
+
+        /*int N = strlen(txt);
+        int cores = world_size;
+        //printf("%d\n", N);
+        int newN = N;
+        int i;
+        int newN_chunk = newN/cores;
+
+        while(newN%cores != 0)
+        {
+            newN++;
+        }
+    
+        char padded_txt[newN];
+        strcpy(padded_txt, txt);
+    
+        for(int v = N; v<newN; v++)
+        {
+            padded_txt[v] = '$';
+        }
         i = newN_chunk*world_rank; // index for txt[]
         int j = 0; // index for pat[]
 
@@ -117,13 +128,22 @@ int main()
                     i = i + 1;
                 }
             }
-        }
+        }*/
     }
 
     //define other cores
     else
     {
-        i = newN_chunk*world_rank; // index for txt[]
+        int local_M;
+        int local_lps[local_M];
+        MPI_Recv(&local_M, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&local_lps, local_M, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        //printf("process %d, number %d", core_number, local_M);
+        for(int i = 0; i<local_M; i++)
+        {
+            printf("%d\n", local_lps[i]);
+        }
+        /*i = newN_chunk*world_rank; // index for txt[]
         int j = 0; // index for pat[]
 
         while (i < newN_chunk*(world_rank+1)+M)
@@ -154,7 +174,7 @@ int main()
                     i = i + 1;
                 }
             }
-        }
+        }*/
     }
 
     MPI_Finalize();
