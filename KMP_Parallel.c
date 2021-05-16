@@ -60,47 +60,33 @@ int main()
     // Get the rank of the process
     int core_number;
     MPI_Comm_rank(MPI_COMM_WORLD, &core_number);
-    
+
+    char txt[] = "abcabcdebcdefgtabishganababceabeevadaaaabcdeabcdebcdefgtabishganababceabeevadaaabcdefgtabishganababceabeevadaaadebcdefgtabishganababceabeevadaaaabcdeabcdebcdefgtabishganababceabeevadaaabcdefgtabishganababceabeevadaaa";
+    char pat[] = "abc";
     
     //define last core
     if(core_number == 0)
     {
 
-        char txt[] = "abcabcdebcdefgtabishganababceabeevadaaaabcdeabcdebcdefgtabishganababceabeevadaaabcdefgtabishganababceabeevadaaadebcdefgtabishganababceabeevadaaaabcdeabcdebcdefgtabishganababceabeevadaaabcdefgtabishganababceabeevadaaa";
-        char pat[] = "abc";
+        
         int M = strlen(pat);
+        int N = strlen(txt);
         int lps[M];
+        int newN = N/cores+M;
+
         computeLPSArray(pat, M, lps);
-        printf("process %d, number %d", core_number, M);
         for(int k = 1; k<cores; k++)
             {
                 MPI_Send(&M, 1, MPI_INT, k, 0, MPI_COMM_WORLD);
                 MPI_Send(&lps, M, MPI_INT, k, 0, MPI_COMM_WORLD);
+                MPI_Send(&N, 1, MPI_INT, k, 0, MPI_COMM_WORLD);
             }
 
-        /*int N = strlen(txt);
-        int cores = world_size;
-        //printf("%d\n", N);
-        int newN = N;
-        int i;
-        int newN_chunk = newN/cores;
-
-        while(newN%cores != 0)
-        {
-            newN++;
-        }
-    
-        char padded_txt[newN];
-        strcpy(padded_txt, txt);
-    
-        for(int v = N; v<newN; v++)
-        {
-            padded_txt[v] = '$';
-        }
-        i = newN_chunk*world_rank; // index for txt[]
+        int i = 0;
+        int end = newN;
         int j = 0; // index for pat[]
 
-        while (i < N)
+        while (i < end)
         {
             if (pat[j] == txt[i])
             {
@@ -110,7 +96,7 @@ int main()
   
             if (j == M) 
             {
-                printf("core %d found pattern at index %d \n", world_rank, i - j);
+                printf("core %d found pattern at index %d \n", core_number, i - j);
                 j = lps[j - 1];
             }
   
@@ -128,25 +114,33 @@ int main()
                     i = i + 1;
                 }
             }
-        }*/
+        }
     }
 
     //define other cores
     else
     {
-        int local_M;
+        int local_M, local_N;
         int local_lps[local_M];
         MPI_Recv(&local_M, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         MPI_Recv(&local_lps, local_M, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        //printf("process %d, number %d", core_number, local_M);
-        for(int i = 0; i<local_M; i++)
+        MPI_Recv(&local_N, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        int start = (local_N/cores)*core_number;
+        int end, i;
+        if(core_number==cores-1)
         {
-            printf("%d\n", local_lps[i]);
+            end = local_N;
         }
-        /*i = newN_chunk*world_rank; // index for txt[]
+        else
+        {
+            end = (local_N/cores)*(core_number+1)+local_M;
+        }
+        //printf("process %d, number %d", core_number, local_M);
+        
+        i = start; // index for txt[]
         int j = 0; // index for pat[]
 
-        while (i < newN_chunk*(world_rank+1)+M)
+        while (i < end)
         {
             if (pat[j] == txt[i])
             {
@@ -154,27 +148,27 @@ int main()
                 i++;
             }
   
-            if (j == M) 
+            if (j == local_M) 
             {
-                printf("core %d found pattern at index %d \n", world_rank, i - j);
-                j = lps[j - 1];
+                printf("core %d found pattern at index %d \n", core_number, i - j);
+                j = local_lps[j - 1];
             }
   
             // mismatch after j matches
-            else if (i < newN_chunk*(world_rank+1)+M && pat[j] != txt[i])
+            else if (i < end && pat[j] != txt[i])
             {
             // Do not match lps[0..lps[j-1]] characters,
             // they will match anyway
                 if (j != 0)
                 {
-                    j = lps[j - 1];
+                    j = local_lps[j - 1];
                 }
                 else
                 {
                     i = i + 1;
                 }
             }
-        }*/
+        }
     }
 
     MPI_Finalize();
