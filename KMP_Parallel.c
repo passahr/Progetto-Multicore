@@ -82,6 +82,8 @@ int main()
                 MPI_Send(&N, 1, MPI_INT, k, 0, MPI_COMM_WORLD);
             }
 
+        int indexes[N];
+        int x_indexes = 0;
         int i = 0;
         int end = newN;
         int j = 0; // index for pat[]
@@ -96,7 +98,8 @@ int main()
   
             if (j == M) 
             {
-                printf("core %d found pattern at index %d \n", core_number, i - j);
+                indexes[x_indexes] = i - j;
+                x_indexes++;
                 j = lps[j - 1];
             }
   
@@ -115,6 +118,26 @@ int main()
                 }
             }
         }
+        for(int k = 1; k<cores; k++)
+        {
+            int foundValues;
+            MPI_Recv(&foundValues, 1, MPI_INT, k, 0, MPI_COMM_WORLD, NULL);
+            if(foundValues > 0)
+            {
+                for(j = 0; j<foundValues;j++)
+                {
+                    int value;
+                    MPI_Recv(&value, 1, MPI_INT, k, 0, MPI_COMM_WORLD, NULL);
+                    indexes[x_indexes] = value;
+                    x_indexes++;
+                }
+            }
+        }
+        for(int k = 0; k<x_indexes; k++)
+        {
+            printf("%d\n", indexes[k]);
+        }
+
     }
 
     //define other cores
@@ -136,7 +159,9 @@ int main()
             end = (local_N/cores)*(core_number+1)+local_M;
         }
         //printf("process %d, number %d", core_number, local_M);
-        
+        int possible_targets = end-start;
+        int next_target = 0;
+        int targets_array[possible_targets];
         i = start; // index for txt[]
         int j = 0; // index for pat[]
 
@@ -150,7 +175,9 @@ int main()
   
             if (j == local_M) 
             {
-                printf("core %d found pattern at index %d \n", core_number, i - j);
+                targets_array[next_target] = i-j;
+                next_target++; 
+                //printf("core %d found pattern at index %d \n", core_number, i - j);
                 j = local_lps[j - 1];
             }
   
@@ -168,7 +195,19 @@ int main()
                     i = i + 1;
                 }
             }
+            
         }
+        MPI_Send(&next_target, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+        if(next_target > 0)
+        {
+            
+            for(j = 0; j<next_target; j++)
+            {
+                int value = targets_array[j];
+                MPI_Send(&value, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+            }
+        }
+        
     }
 
     MPI_Finalize();
