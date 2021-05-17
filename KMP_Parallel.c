@@ -48,10 +48,62 @@ void computeLPSArray(char* pat, int M, int* lps)
 
 int main()
 {
+    char ch1;
+    FILE *fp;
+
+    fp = fopen("processed.txt", "r"); // read mode
+    
+    if (fp == NULL)
+    {
+       perror("Error while opening the file.\n");
+       
+    }
+
+    char *txt;
+    int i = 0;
+    int num_packet = 1;
+
+    while((ch1 = fgetc(fp)) != EOF)
+    {
+        if(ch1 == '\n')
+        {
+            num_packet++;
+        }
+        
+        i++;
+    }
+    fclose(fp);
+
+    //with this first analysis I get important information about the size of the data to store.
+    num_packet--;
+
+    //printf("%d \n", i);
+    //printf("%d \n", num_packet);
+
+    //here I initialize the stream that will contain all the data that I'll have to analyze  
+    txt = (char *)malloc(sizeof(char)*i);
+
+    i = 0;
+
+    //second file analysis to fill the datastream
+    fp = fopen("processed.txt", "r"); // read mode
+    
+    if (fp == NULL)
+    {
+       perror("Error while opening the file.\n");
+       
+    }
+
+    while((ch1 = fgetc(fp)) != EOF)
+    {
+        txt[i] = ch1;
+        i++;
+    }
+
+    fclose(fp);
   /*############################################################################################
     # Definizione Del LPS                                                                      #
     ############################################################################################*/
-
     MPI_Init(NULL, NULL);
         //char pattern_to_find = patterns[i];
         // Get the number of processes
@@ -61,8 +113,7 @@ int main()
     int core_number;
     MPI_Comm_rank(MPI_COMM_WORLD, &core_number);
 
-    char txt[] = "abcabcdebcdefgtabishganababceabeevadaaaabcdeabcdebcdefgtabishganababceabeevadaaabcdefgtabishganababceabeevadaaadebcdefgtabishganababceabeevadaaaabcdeabcdebcdefgtabishganababceabeevadaaabcdefgtabishganababceabeevadaaa";
-    char pat[] = "abc";
+    char pat[] = "bomb";
     
     //define last core
     if(core_number == 0)
