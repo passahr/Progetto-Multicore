@@ -46,7 +46,7 @@ void computeLPSArray(char* pat, int M, int* lps)
     }
 }
 
-int main()
+int main(int argc, char *argv[])
 {
     char ch1;
     FILE *fp;
@@ -113,12 +113,14 @@ int main()
     int core_number;
     MPI_Comm_rank(MPI_COMM_WORLD, &core_number);
 
-    char pat[] = "bomb";
+    char pat[20];
+    strcpy(pat, argv[1]);
+    
     
     //define last core
     if(core_number == 0)
     {
-
+        
         
         int M = strlen(pat);
         int N = strlen(txt);
