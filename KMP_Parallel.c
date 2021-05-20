@@ -105,6 +105,8 @@ int main(int argc, char *argv[])
     # Definizione Del LPS                                                                      #
     ############################################################################################*/
     MPI_Init(NULL, NULL);
+    double t1, t2; 
+    t1 = MPI_Wtime();
         //char pattern_to_find = patterns[i];
         // Get the number of processes
     int cores;
@@ -262,6 +264,9 @@ int main(int argc, char *argv[])
         }
         
     }
+    t2 = MPI_Wtime();
+
+    printf( "Elapsed time is %f\n", t2 - t1 ); 
 
     MPI_Finalize();
 

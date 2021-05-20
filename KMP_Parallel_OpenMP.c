@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
     //#####################################
     //# ANALISI DELLO STREAM TCP/UDP FINE #
     //#####################################
-
+    double start, end; 
     char pat[20];
     strcpy(pat, argv[1]);
     int M = strlen(pat);
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
     int next_index = 0;
 
     computeLPSArray(pat, M, lps);
-
+    start = omp_get_wtime(); 
     #pragma omp parallel shared(indexes, next_index)
     {
         int thread_number = omp_get_num_threads();
@@ -168,4 +168,6 @@ int main(int argc, char *argv[])
     {
         printf("%d\n", indexes[i]);
     }
+    end = omp_get_wtime(); 
+    printf("Work took %f seconds\n", end - start);
 }
