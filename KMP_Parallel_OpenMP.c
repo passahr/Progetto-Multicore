@@ -174,11 +174,12 @@ int main(int argc, char *argv[])
     
         
     }
+    end = omp_get_wtime(); 
     #pragma omp parallel for
     for(i = 0; i<next_index; i++)
     {
         printf("%d\n", indexes[i]);
     }
-    end = omp_get_wtime(); 
-    printf("Work took %f seconds\n", end - start);
+    
+    printf("OpenMP execution time is: %f\n", end - start);
 }

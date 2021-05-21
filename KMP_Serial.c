@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
     
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    printf("Elapsed time: %f\n", time_spent);
+    printf("The execution time of the serial algorithm is: %f\n", time_spent);
 
     return 0;
 }

@@ -190,6 +190,7 @@ int main(int argc, char *argv[])
                 }
             }
         }
+        t2 = MPI_Wtime();
         for(int k = 0; k<x_indexes; k++)
         {
             printf("%d\n", indexes[k]);
@@ -263,9 +264,12 @@ int main(int argc, char *argv[])
         }
         
     }
-    t2 = MPI_Wtime();
-
-    printf( "Elapsed time is %f\n", t2 - t1 ); 
+    
+    if(core_number == 0)
+    {
+        printf( "MPI execution time is: %f\n", t2 - t1 );
+    }
+     
 
     MPI_Finalize();
 

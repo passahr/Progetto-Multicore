@@ -13,6 +13,8 @@ packets = []
 for packet in packets_json:
     stringa_pacchetto = json.dumps(packet)+"\n"
     packets.append(stringa_pacchetto)
-    print(len(stringa_pacchetto))
+    
 
 file.writelines(packets)    
+
+print("File created!")
