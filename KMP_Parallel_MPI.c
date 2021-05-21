@@ -106,9 +106,9 @@ int main(int argc, char *argv[])
     }
 
     fclose(fp);
-  /*############################################################################################
-    # Definizione Del LPS                                                                      #
-    ############################################################################################*/
+
+
+
     MPI_Init(NULL, NULL);
     double t1, t2; 
     t1 = MPI_Wtime();
@@ -177,18 +177,16 @@ int main(int argc, char *argv[])
         }
         for(int k = 1; k<cores; k++)
         {
-            int foundValues;
-            MPI_Recv(&foundValues, 1, MPI_INT, k, 0, MPI_COMM_WORLD, NULL);
-            if(foundValues > 0)
+            int foundValue;
+            MPI_Recv(&foundValue, 1, MPI_INT, k, 0, MPI_COMM_WORLD, NULL);
+            while(foundValue >= 0)
             {
-                for(j = 0; j<foundValues;j++)
-                {
-                    int value;
-                    MPI_Recv(&value, 1, MPI_INT, k, 0, MPI_COMM_WORLD, NULL);
-                    indexes[x_indexes] = value;
-                    x_indexes++;
-                }
+                indexes[x_indexes] = foundValue;
+                x_indexes++;
+                MPI_Recv(&foundValue, 1, MPI_INT, k, 0, MPI_COMM_WORLD, NULL);
             }
+            
+
         }
         t2 = MPI_Wtime();
         for(int k = 0; k<x_indexes; k++)
@@ -217,9 +215,7 @@ int main(int argc, char *argv[])
             end = (local_N/cores)*(core_number+1)+local_M;
         }
         
-        int possible_targets = end-start;
-        int next_target = 0;
-        int targets_array[possible_targets];
+        int next_target;
         i = start; // index for txt[]
         int j = 0; // index for pat[]
 
@@ -233,8 +229,8 @@ int main(int argc, char *argv[])
   
             if (j == local_M) 
             {
-                targets_array[next_target] = i-j;
-                next_target++; 
+                next_target = i-j;
+                MPI_Send(&next_target, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
                 j = local_lps[j - 1];
             }
   
@@ -252,16 +248,8 @@ int main(int argc, char *argv[])
             }
             
         }
+        next_target = -1;
         MPI_Send(&next_target, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-        if(next_target > 0)
-        {
-            
-            for(j = 0; j<next_target; j++)
-            {
-                int value = targets_array[j];
-                MPI_Send(&value, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-            }
-        }
         
     }
     
