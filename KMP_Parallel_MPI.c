@@ -56,6 +56,10 @@ void computeLPSArray(char* pat, int M, int* lps)
 
 int main(int argc, char *argv[])
 {
+/*#################################
+  # PROCESSING THE TCP/UDP STREAM #
+  #################################
+*/ 
     char ch1;
     FILE *fp;
 
@@ -107,7 +111,10 @@ int main(int argc, char *argv[])
 
     fclose(fp);
 
-
+/*####################################
+  # Beginning of the parallelization #
+  ####################################
+*/ 
 
     MPI_Init(NULL, NULL);
     double t1, t2; 
@@ -124,7 +131,7 @@ int main(int argc, char *argv[])
     strcpy(pat, argv[1]);
     
     
-    //define last core
+    //MASTER CORE BEHAVIOUR
     if(core_number == 0)
     {
         
@@ -178,6 +185,7 @@ int main(int argc, char *argv[])
         for(int k = 1; k<cores; k++)
         {
             int foundValue;
+            //RECEIVES INDEXES UNTIL ITS NEGATIVE
             MPI_Recv(&foundValue, 1, MPI_INT, k, 0, MPI_COMM_WORLD, NULL);
             while(foundValue >= 0)
             {
@@ -189,6 +197,8 @@ int main(int argc, char *argv[])
 
         }
         t2 = MPI_Wtime();
+
+        //PRINTS INDEXES
         for(int k = 0; k<x_indexes; k++)
         {
             printf("%d\n", indexes[k]);
@@ -196,11 +206,12 @@ int main(int argc, char *argv[])
 
     }
 
-    //define other cores
+    //OTHER CORES BEHAVIOUR
     else
     {
         int local_M, local_N;
         int local_lps[local_M];
+        //RECEIVE LSP, LSP_LENGTH AND STRING LENGTH
         MPI_Recv(&local_M, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         MPI_Recv(&local_lps, local_M, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         MPI_Recv(&local_N, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -208,6 +219,7 @@ int main(int argc, char *argv[])
         int end, i;
         if(core_number==cores-1)
         {
+            //IF LAST CORE IT COMPUTES UNTIL THE END
             end = local_N;
         }
         else
@@ -230,6 +242,7 @@ int main(int argc, char *argv[])
             if (j == local_M) 
             {
                 next_target = i-j;
+                //POSITIVE INDEXES ARE SENT FROM HERE
                 MPI_Send(&next_target, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
                 j = local_lps[j - 1];
             }
@@ -249,6 +262,7 @@ int main(int argc, char *argv[])
             
         }
         next_target = -1;
+        //SEND A NEGATIVE INDEX, STOPS THE STREAM
         MPI_Send(&next_target, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
         
     }

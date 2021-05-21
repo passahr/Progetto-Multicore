@@ -10,7 +10,7 @@ Description: Implementing an algorithm that will look for a set of strings insid
 #include <malloc.h>
 #include <time.h>
 
-
+//Function that elaborate the pattern
 void computeLPSArray(char* pat, int M, int* lps)
 {
     // length of the previous longest prefix suffix
@@ -45,7 +45,7 @@ void computeLPSArray(char* pat, int M, int* lps)
     }
 }
 
-
+//KMP Function
 void KMPSearch(char* pat, char* txt)
 {
     int M = strlen(pat);
@@ -86,8 +86,10 @@ void KMPSearch(char* pat, char* txt)
   
 int main(int argc, char *argv[])
 {
-
-    //Preprocesing of the previously processed file with python
+/*#################################
+  # PROCESSING THE TCP/UDP STREAM #
+  #################################
+*/ 
 
     //open file
     char ch1;
@@ -151,7 +153,7 @@ int main(int argc, char *argv[])
     
     clock_t begin = clock();
 
-            
+    //execute KMP            
     KMPSearch(pat, datastream);
     
     clock_t end = clock();

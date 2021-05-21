@@ -55,9 +55,7 @@ void computeLPSArray(char* pat, int M, int* lps)
 
 int main(int argc, char *argv[])
 {
-    //################################
-    //# ANALISI DELLO STREAM TCP/UDP #
-    //################################
+
     char ch1;
     FILE *fp;
 
@@ -109,9 +107,7 @@ int main(int argc, char *argv[])
 
     fclose(fp);
 
-    //#####################################
-    //# ANALISI DELLO STREAM TCP/UDP FINE #
-    //#####################################
+
     double start, end; 
     char pat[20];
     strcpy(pat, argv[1]);
@@ -120,9 +116,10 @@ int main(int argc, char *argv[])
     int lps[M];
     int indexes[N];
     int next_index = 0;
-
-    computeLPSArray(pat, M, lps);
     start = omp_get_wtime(); 
+    //COMPUTE LPS
+    computeLPSArray(pat, M, lps);
+    
     #pragma omp parallel shared(indexes, next_index)
     {
         int thread_number = omp_get_num_threads();
@@ -150,6 +147,7 @@ int main(int argc, char *argv[])
   
             if (j == M) 
             {
+                //RACE CONDITION
                 #pragma omp critical
                 {
                     indexes[next_index] = i - j;
