@@ -1,9 +1,17 @@
 /*
 Author: Gianfranco "kanema" Passanisi
 Description: Implementing an algorithm that will look for a set of strings inside a set of TCP/UDP data packets that
- utilizes Knuth-Moris-Pratt algorithm. This is the serial implementation, this code will be also implemented with:
-- Parallel distributed programming with MPI --> KMP_Parallel_MPI_Chainless.c
-- Parallel distributed programming with MPI --> KMP_Parallel_MPI_Chainful.c
+utilizes Knuth-Moris-Pratt algorithm. This is the parallel implementation made with MPI. The general workflow is the following:
+ -the text file to analyze is locally known by every core
+ -master core gets pattern to match
+ -master core sends the elaborated pattern-string
+ -master core sends indexes of the chunks (beginning and end)
+ -master core elaboretes its chunk meanwhile the other cores do the same thing as well
+ -master core wille receive indexes of the pattern, if found from other cores and it will store them in an array
+ -master core will print found indexes
+ -end.
+This code will be also implemented with:
+- Serial algorithm                          --> KMP_Serial.c
 - Parallel shared programming with OpenMP   --> KMP_Parallel_OpenMP.c
 */
 #include <stdio.h>
@@ -76,9 +84,6 @@ int main(int argc, char *argv[])
 
     //with this first analysis I get important information about the size of the data to store.
     num_packet--;
-
-    //printf("%d \n", i);
-    //printf("%d \n", num_packet);
 
     //here I initialize the stream that will contain all the data that I'll have to analyze  
     txt = (char *)malloc(sizeof(char)*i);
@@ -158,11 +163,8 @@ int main(int argc, char *argv[])
                 j = lps[j - 1];
             }
   
-            // mismatch after j matches
             else if (i < N && pat[j] != txt[i])
             {
-            // Do not match lps[0..lps[j-1]] characters,
-            // they will match anyway
                 if (j != 0)
                 {
                     j = lps[j - 1];
@@ -213,7 +215,7 @@ int main(int argc, char *argv[])
         {
             end = (local_N/cores)*(core_number+1)+local_M;
         }
-        //printf("process %d, number %d", core_number, local_M);
+        
         int possible_targets = end-start;
         int next_target = 0;
         int targets_array[possible_targets];
@@ -232,15 +234,12 @@ int main(int argc, char *argv[])
             {
                 targets_array[next_target] = i-j;
                 next_target++; 
-                //printf("core %d found pattern at index %d \n", core_number, i - j);
                 j = local_lps[j - 1];
             }
   
             // mismatch after j matches
             else if (i < end && pat[j] != txt[i])
             {
-            // Do not match lps[0..lps[j-1]] characters,
-            // they will match anyway
                 if (j != 0)
                 {
                     j = local_lps[j - 1];

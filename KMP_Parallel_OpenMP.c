@@ -1,3 +1,18 @@
+/*
+Author: Gianfranco "kanema" Passanisi
+Description: Implementing an algorithm that will look for a set of strings inside a set of TCP/UDP data packets that
+utilizes Knuth-Moris-Pratt algorithm. This is the parralel implementation made with OpenMP. The general workflow is the following:
+ -text and pattern are globally shared
+ -"pragma parallel" directive will behaviour differently as each thread analyze a different chunk of the text
+ -last thread will analyze text till the end
+ -race condition is found while updating the array that will contain all the indexes, it's treated with a "pragma critical" section
+ -a "pragma parallel for" will print all the indexes in the array
+ -end.
+This code will be also implemented with:
+- Serial algorithm                          --> KMP_Serial.c
+- Parallel distributed programming with MPI --> KMP_Parallel_MPI.c
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,22 +27,22 @@ void computeLPSArray(char* pat, int M, int* lps)
   
     // the loop calculates lps[i] for i = 1 to M-1
     int i = 1;
-    while (i < M) {
-        if (pat[i] == pat[len]) {
+    while (i < M)
+    {
+        if (pat[i] == pat[len])
+        {
             len++;
             lps[i] = len;
             i++;
         }
         else // (pat[i] != pat[len])
         {
-            // This is tricky. Consider the example.
-            // AAACAAAA and i = 7. The idea is similar
-            // to search step.
-            if (len != 0) {
+        
+            if (len != 0)
+            {
                 len = lps[len - 1];
   
-                // Also, note that we do not increment
-                // i here
+                
             }
             else // if (len == 0)
             {
@@ -72,9 +87,6 @@ int main(int argc, char *argv[])
     //with this first analysis I get important information about the size of the data to store.
     num_packet--;
 
-    //printf("%d \n", i);
-    //printf("%d \n", num_packet);
-
     //here I initialize the stream that will contain all the data that I'll have to analyze  
     txt = (char *)malloc(sizeof(char)*i);
 
@@ -118,6 +130,7 @@ int main(int argc, char *argv[])
         int start = (N/thread_number*thread_rank);
         int end = (N/thread_number*(thread_rank+1))-1+M;
 
+        //last thread computes till the end
         if(thread_rank==thread_number-1)
         {
             end = N;
@@ -145,11 +158,9 @@ int main(int argc, char *argv[])
                 j = lps[j - 1];
             }
   
-            // mismatch after j matches
             else if (i < end && pat[j] != txt[i])
             {
-            // Do not match lps[0..lps[j-1]] characters,
-            // they will match anyway
+            
                 if (j != 0)
                 {
                     j = lps[j - 1];
