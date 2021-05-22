@@ -54,7 +54,7 @@ void computeLPSArray(char* pat, int M, int* lps)
     }
 }
 
-int main(int argc, char *argv[])
+double KMP_Parallel_MPI(char *pattern)
 {
 /*#################################
   # PROCESSING THE TCP/UDP STREAM #
@@ -73,21 +73,16 @@ int main(int argc, char *argv[])
 
     char *txt;
     int i = 0;
-    int num_packet = 1;
+    
 
     while((ch1 = fgetc(fp)) != EOF)
     {
-        if(ch1 == '\n')
-        {
-            num_packet++;
-        }
-        
         i++;
     }
     fclose(fp);
 
     //with this first analysis I get important information about the size of the data to store.
-    num_packet--;
+    
 
     //here I initialize the stream that will contain all the data that I'll have to analyze  
     txt = (char *)malloc(sizeof(char)*i);
@@ -128,7 +123,7 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &core_number);
 
     char pat[20];
-    strcpy(pat, argv[1]);
+    strcpy(pat, pattern);
     
     
     //MASTER CORE BEHAVIOUR
@@ -267,12 +262,18 @@ int main(int argc, char *argv[])
         
     }
     
-    if(core_number == 0)
-    {
-        printf( "MPI execution time is: %f\n", t2 - t1 );
-    }
-     
+    free(txt);
 
     MPI_Finalize();
+    return (t2-t1);
+}
 
+int main(int argc, char *argv[])
+{
+    char *patt = argv[1];
+    double o = KMP_Parallel_MPI(patt);
+    if(o>0.0)
+    {
+        printf( "MPI execution time is: %f\n", o);
+    }
 }

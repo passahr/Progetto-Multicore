@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
     char ch1;
     FILE *fp;
 
-    fp = fopen("processed.txt", "r"); // read mode
+    fp = fopen("processed_long.txt", "r"); // read mode
     
     if (fp == NULL)
     {
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
     i = 0;
 
     //second file analysis to fill the datastream
-    fp = fopen("processed.txt", "r"); // read mode
+    fp = fopen("processed_long.txt", "r"); // read mode
     
     if (fp == NULL)
     {

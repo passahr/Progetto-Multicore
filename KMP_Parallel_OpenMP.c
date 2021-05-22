@@ -53,9 +53,8 @@ void computeLPSArray(char* pat, int M, int* lps)
     }
 }
 
-int main(int argc, char *argv[])
+double KMP_Parallel_OpenMP(char* pattern)
 {
-
     char ch1;
     FILE *fp;
 
@@ -64,26 +63,20 @@ int main(int argc, char *argv[])
     if (fp == NULL)
     {
        perror("Error while opening the file.\n");
-       
     }
 
     char *txt;
     int i = 0;
-    int num_packet = 1;
+
 
     while((ch1 = fgetc(fp)) != EOF)
     {
-        if(ch1 == '\n')
-        {
-            num_packet++;
-        }
-        
         i++;
     }
     fclose(fp);
 
     //with this first analysis I get important information about the size of the data to store.
-    num_packet--;
+
 
     //here I initialize the stream that will contain all the data that I'll have to analyze  
     txt = (char *)malloc(sizeof(char)*i);
@@ -110,7 +103,7 @@ int main(int argc, char *argv[])
 
     double start, end; 
     char pat[20];
-    strcpy(pat, argv[1]);
+    strcpy(pat, pattern);
     int M = strlen(pat);
     int N = strlen(txt);
     int lps[M];
@@ -172,6 +165,7 @@ int main(int argc, char *argv[])
     
         
     }
+    free(txt);
     end = omp_get_wtime(); 
     #pragma omp parallel for
     for(i = 0; i<next_index; i++)
@@ -179,5 +173,13 @@ int main(int argc, char *argv[])
         printf("%d\n", indexes[i]);
     }
     
-    printf("OpenMP execution time is: %f\n", end - start);
+    
+    return (end-start);
+}
+
+int main(int argc, char *argv[])
+{
+    char *patt = argv[1];
+    double time = KMP_Parallel_OpenMP(patt);
+    printf("OpenMP execution time is: %f\n", time);
 }
