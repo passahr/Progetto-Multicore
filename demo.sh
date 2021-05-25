@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Demo started"
+echo "Demo started" 
 
 
 #compile serial algorithm
@@ -11,28 +11,28 @@ gcc -o "openmpexe" -fopenmp "KMP_Parallel_OpenMP.c"
 
 
 echo "Serial execution vs 2 cores execution, pattern to find: 'kill' "
-./"serialexe" "kill"
-mpiexec -n 2 ./"mpiexe" "kill"
+./"serialexe" "kill" "pill" "chill"
+mpiexec -n 2 ./"mpiexe" "kill" "pill" "chill"
 export OMP_NUM_THREADS=2
-./"openmpexe" "kill"
+./"openmpexe" "kill" "pill" "chill"
 
 echo "Serial execution vs 4 cores execution, pattern to find: 'kill' "
-./"serialexe" "kill"
-mpiexec -n 4 ./"mpiexe" "kill"
+./"serialexe" "kill" "pill" "chill"
+mpiexec -n 4 ./"mpiexe" "kill" "pill" "chill"
 export OMP_NUM_THREADS=4
-./"openmpexe" "kill"
+./"openmpexe" "kill" "pill" "chill"
 
 echo "Serial execution vs 2 cores execution, pattern to find: 'killhill' "
-./"serialexe" "killhill"
-mpiexec -n 2 ./"mpiexe" "killhill"
+./"serialexe" "killhill" "kill" "pill" "chill"
+mpiexec -n 2 ./"mpiexe" "killhill" "kill" "pill" "chill"
 export OMP_NUM_THREADS=2
-./"openmpexe" "killhill"
+./"openmpexe" "killhill" "kill" "pill" "chill"
 
 echo "Serial execution vs 4 cores execution, pattern to find: 'killhill' "
-./"serialexe" "killhill"
-mpiexec -n 4 ./"mpiexe" "killhill"
+./"serialexe" "killhill" "kill" "pill" "chill"
+mpiexec -n 4 ./"mpiexe" "killhill" "kill" "pill" "chill"
 export OMP_NUM_THREADS=4
-./"openmpexe" "killhill"
+./"openmpexe" "killhill" "kill" "pill" "chill"
 
 echo "Demo ended"
 

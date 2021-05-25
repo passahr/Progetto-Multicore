@@ -179,7 +179,14 @@ double KMP_Parallel_OpenMP(char* pattern)
 
 int main(int argc, char *argv[])
 {
-    char *patt = argv[1];
-    double time = KMP_Parallel_OpenMP(patt);
-    printf("OpenMP execution time is: %f\n", time);
+    double final_time = 0.0;
+    for(int i=1; i<argc; i++)
+    {
+        char *patt = argv[i];
+        double time = KMP_Parallel_OpenMP(patt);
+        final_time += time;
+        //printf("%s\n", patt);
+    }
+    //
+    printf("OpenMP execution time is: %f\n", final_time);
 }

@@ -69,7 +69,7 @@ void KMPSearch(char* pat, char* txt)
   
         if (j == M)
         {
-            printf("Found pattern at index %d\n", i - j);
+            printf("%d\n", i - j);
             j = lps[j - 1];
         }
   
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
     char ch1;
     FILE *fp;
 
-    fp = fopen("processed_long.txt", "r"); // read mode
+    fp = fopen("processed.txt", "r"); // read mode
     
     if (fp == NULL)
     {
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
     i = 0;
 
     //second file analysis to fill the datastream
-    fp = fopen("processed_long.txt", "r"); // read mode
+    fp = fopen("processed.txt", "r"); // read mode
     
     if (fp == NULL)
     {
@@ -147,18 +147,31 @@ int main(int argc, char *argv[])
 
     fclose(fp);
 
-    char pat[20];
+    //char pat[20];
     //get pattern
-    strcpy(pat, argv[1]);
+    //strcpy(pat, argv[1]);
     
-    clock_t begin = clock();
+    
 
     //execute KMP            
-    KMPSearch(pat, datastream);
     
-    clock_t end = clock();
-    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    printf("The execution time of the serial algorithm is: %f\n", time_spent);
+
+    double final_time = 0.0;
+    for(int i=1; i<argc; i++)
+    {
+        char *patt = argv[i];
+        clock_t begin = clock();
+        KMPSearch(patt, datastream);
+        clock_t end = clock();
+        printf("%s\n", patt);
+        double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+        final_time += time_spent;
+        
+    }
+    
+    
+    
+    printf("Serial algorithm time is: %f\n", final_time);
 
     return 0;
 }

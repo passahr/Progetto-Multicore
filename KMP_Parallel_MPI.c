@@ -54,7 +54,10 @@ void computeLPSArray(char* pat, int M, int* lps)
     }
 }
 
-double KMP_Parallel_MPI(char *pattern)
+
+
+
+int main(int argc, char *argv[])
 {
 /*#################################
   # PROCESSING THE TCP/UDP STREAM #
@@ -112,7 +115,9 @@ double KMP_Parallel_MPI(char *pattern)
 */ 
 
     MPI_Init(NULL, NULL);
+    
     double t1, t2; 
+
     t1 = MPI_Wtime();
         //char pattern_to_find = patterns[i];
         // Get the number of processes
@@ -121,159 +126,151 @@ double KMP_Parallel_MPI(char *pattern)
     // Get the rank of the process
     int core_number;
     MPI_Comm_rank(MPI_COMM_WORLD, &core_number);
-
-    char pat[20];
-    strcpy(pat, pattern);
-    
     
     //MASTER CORE BEHAVIOUR
     if(core_number == 0)
     {
-        
-        
-        int M = strlen(pat);
-        int N = strlen(txt);
-        int lps[M];
-        int newN = N/cores+M;
-
-        computeLPSArray(pat, M, lps);
-        for(int k = 1; k<cores; k++)
-            {
-                MPI_Send(&M, 1, MPI_INT, k, 0, MPI_COMM_WORLD);
-                MPI_Send(&lps, M, MPI_INT, k, 0, MPI_COMM_WORLD);
-                MPI_Send(&N, 1, MPI_INT, k, 0, MPI_COMM_WORLD);
-            }
-
-        int indexes[N];
-        int x_indexes = 0;
-        int i = 0;
-        int end = newN;
-        int j = 0; // index for pat[]
-
-        while (i < end)
+        char pat[20];
+        for(int k = 1; k<argc; k++)
         {
-            if (pat[j] == txt[i])
-            {
-                j++;
-                i++;
-            }
-  
-            if (j == M) 
-            {
-                indexes[x_indexes] = i - j;
-                x_indexes++;
-                j = lps[j - 1];
-            }
-  
-            else if (i < N && pat[j] != txt[i])
-            {
-                if (j != 0)
+            
+            strcpy(pat, argv[k]);
+            printf("Now looking for %s\n", argv[k]);
+        
+            
+            
+            int M = strlen(pat);
+            int N = strlen(txt);
+            int lps[M];
+            int newN = N/cores+M;
+            computeLPSArray(pat, M, lps);
+            for(int k = 1; k<cores; k++)
                 {
+                    MPI_Send(&pat, M, MPI_CHAR, k, 0, MPI_COMM_WORLD);
+                    MPI_Send(&M, 1, MPI_INT, k, 0, MPI_COMM_WORLD);
+                    MPI_Send(&lps, M, MPI_INT, k, 0, MPI_COMM_WORLD);
+                    MPI_Send(&N, 1, MPI_INT, k, 0, MPI_COMM_WORLD);
+                }
+            int indexes[N];
+            int x_indexes = 0;
+            int i = 0;
+            int end = newN;
+            int j = 0; // index for pat[]
+            while (i < end)
+            {
+                if (pat[j] == txt[i])
+                {
+                    j++;
+                    i++;
+                }
+
+                if (j == M) 
+                {
+                    indexes[x_indexes] = i - j;
+                    x_indexes++;
                     j = lps[j - 1];
                 }
-                else
+
+                else if (i < N && pat[j] != txt[i])
                 {
-                    i = i + 1;
+                    if (j != 0)
+                    {
+                        j = lps[j - 1];
+                    }
+                    else
+                    {
+                        i = i + 1;
+                    }
                 }
             }
-        }
-        for(int k = 1; k<cores; k++)
-        {
-            int foundValue;
-            //RECEIVES INDEXES UNTIL ITS NEGATIVE
-            MPI_Recv(&foundValue, 1, MPI_INT, k, 0, MPI_COMM_WORLD, NULL);
-            while(foundValue >= 0)
+            for(int k = 1; k<cores; k++)
             {
-                indexes[x_indexes] = foundValue;
-                x_indexes++;
+                int foundValue;
+                //RECEIVES INDEXES UNTIL ITS NEGATIVE
                 MPI_Recv(&foundValue, 1, MPI_INT, k, 0, MPI_COMM_WORLD, NULL);
+                while(foundValue >= 0)
+                {
+                    indexes[x_indexes] = foundValue;
+                    x_indexes++;
+                    MPI_Recv(&foundValue, 1, MPI_INT, k, 0, MPI_COMM_WORLD, NULL);
+                }
+            }
+            t2 = MPI_Wtime();
+            //PRINTS INDEXES
+            for(int k = 0; k<x_indexes; k++)
+            {
+                printf("%d\n", indexes[k]);
             }
             
-
         }
-        t2 = MPI_Wtime();
-
-        //PRINTS INDEXES
-        for(int k = 0; k<x_indexes; k++)
-        {
-            printf("%d\n", indexes[k]);
-        }
-
+        
+        printf("MPI execution time is:%f\n", t2-t1);
     }
-
     //OTHER CORES BEHAVIOUR
     else
     {
-        int local_M, local_N;
-        int local_lps[local_M];
-        //RECEIVE LSP, LSP_LENGTH AND STRING LENGTH
-        MPI_Recv(&local_M, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&local_lps, local_M, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&local_N, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        int start = (local_N/cores)*core_number;
-        int end, i;
-        if(core_number==cores-1)
+        for(int k = 1; k<argc; k++)
         {
-            //IF LAST CORE IT COMPUTES UNTIL THE END
-            end = local_N;
-        }
-        else
-        {
-            end = (local_N/cores)*(core_number+1)+local_M;
-        }
-        
-        int next_target;
-        i = start; // index for txt[]
-        int j = 0; // index for pat[]
-
-        while (i < end)
-        {
-            if (pat[j] == txt[i])
+            char pat[20];
+            int local_M, local_N;
+            int local_lps[local_M];
+            //RECEIVE LSP, LSP_LENGTH AND STRING LENGTH
+            MPI_Recv(&pat, 20, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(&local_M, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(&local_lps, local_M, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(&local_N, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            int start = (local_N/cores)*core_number;
+            int end, i;
+            if(core_number==cores-1)
             {
-                j++;
-                i++;
+                //IF LAST CORE IT COMPUTES UNTIL THE END
+                end = local_N;
             }
-  
-            if (j == local_M) 
+            else
             {
-                next_target = i-j;
-                //POSITIVE INDEXES ARE SENT FROM HERE
-                MPI_Send(&next_target, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-                j = local_lps[j - 1];
+                end = (local_N/cores)*(core_number+1)+local_M;
             }
-  
-            // mismatch after j matches
-            else if (i < end && pat[j] != txt[i])
+            int next_target;
+            i = start; // index for txt[]
+            int j = 0; // index for pat[]
+            while (i < end)
             {
-                if (j != 0)
+                if (pat[j] == txt[i])
                 {
+                    j++;
+                    i++;
+                }
+
+                if (j == local_M) 
+                {
+                    next_target = i-j;
+                    //POSITIVE INDEXES ARE SENT FROM HERE
+                    MPI_Send(&next_target, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
                     j = local_lps[j - 1];
                 }
-                else
+
+                // mismatch after j matches
+                else if (i < end && pat[j] != txt[i])
                 {
-                    i = i + 1;
+                    if (j != 0)
+                    {
+                        j = local_lps[j - 1];
+                    }
+                    else
+                    {
+                        i = i + 1;
+                    }
                 }
             }
-            
+            next_target = -1;
+            //SEND A NEGATIVE INDEX, STOPS THE STREAM
+            MPI_Send(&next_target, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
         }
-        next_target = -1;
-        //SEND A NEGATIVE INDEX, STOPS THE STREAM
-        MPI_Send(&next_target, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-        
-    }
-    
+    }   
     free(txt);
+    ///MPI_Barrier(MPI_COMM_WORLD);
 
     MPI_Finalize();
-    return (t2-t1);
-}
 
-int main(int argc, char *argv[])
-{
-    char *patt = argv[1];
-    double o = KMP_Parallel_MPI(patt);
-    if(o>0.0)
-    {
-        printf( "MPI execution time is: %f\n", o);
-    }
+
 }
