@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
         {
             
             strcpy(pat, argv[k]);
-            printf("Now looking for %s\n", argv[k]);
+            //printf("Now looking for %s\n", argv[k]);
         
             
             

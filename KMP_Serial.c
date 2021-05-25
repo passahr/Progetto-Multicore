@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
         clock_t begin = clock();
         KMPSearch(patt, datastream);
         clock_t end = clock();
-        printf("%s\n", patt);
+        //printf("%s\n", patt);
         double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
         final_time += time_spent;
         
