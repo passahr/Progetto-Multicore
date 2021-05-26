@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
             //PRINTS INDEXES
             for(int k = 0; k<x_indexes; k++)
             {
-                printf("%d\n", indexes[k]);
+                //printf("%d\n", indexes[k]);
             }
             
         }

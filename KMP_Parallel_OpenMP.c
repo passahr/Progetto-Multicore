@@ -170,7 +170,7 @@ double KMP_Parallel_OpenMP(char* pattern)
     #pragma omp parallel for
     for(i = 0; i<next_index; i++)
     {
-        printf("%d\n", indexes[i]);
+        //printf("%d\n", indexes[i]);
     }
     
     

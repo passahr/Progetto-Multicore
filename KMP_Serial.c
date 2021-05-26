@@ -69,7 +69,7 @@ void KMPSearch(char* pat, char* txt)
   
         if (j == M)
         {
-            printf("%d\n", i - j);
+            //printf("%d\n", i - j);
             j = lps[j - 1];
         }
   
