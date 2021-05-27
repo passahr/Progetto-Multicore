@@ -1,0 +1,6 @@
+Gli algoritmi ricercano le parole all'interno dello stream contenuto in "processed.txt", lo stream è stato ottenuto tramite wireshark ed è stato rielaborato con python.
+I pacchetti sono stati estratti dal formato json fornito da wireshark.
+
+fornire ai file compilati in input la lista di parole da cercare 
+MPI Es. ./mpiexe coreNumber "word1" "word2" ... "wordN"
+OpenMP Es. export OMP_NUM_THREADS=coreNumber && ./openmpexe "word1" "word2" ... "wordN"

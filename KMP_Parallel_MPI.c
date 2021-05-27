@@ -126,36 +126,35 @@ int main(int argc, char *argv[])
     // Get the rank of the process
     int core_number;
     MPI_Comm_rank(MPI_COMM_WORLD, &core_number);
-    
+    char pat[20];
+    int start, end, M, N, j; 
+    int lps[M];
     //MASTER CORE BEHAVIOUR
     if(core_number == 0)
     {
-        char pat[20];
+        
         for(int k = 1; k<argc; k++)
         {
             
             strcpy(pat, argv[k]);
-            //printf("Now looking for %s\n", argv[k]);
-        
             
-            
-            int M = strlen(pat);
-            int N = strlen(txt);
+            M = strlen(pat);
+            N = strlen(txt);
             int lps[M];
-            int newN = N/cores+M;
+            
             computeLPSArray(pat, M, lps);
-            for(int k = 1; k<cores; k++)
-                {
-                    MPI_Send(&pat, M, MPI_CHAR, k, 0, MPI_COMM_WORLD);
-                    MPI_Send(&M, 1, MPI_INT, k, 0, MPI_COMM_WORLD);
-                    MPI_Send(&lps, M, MPI_INT, k, 0, MPI_COMM_WORLD);
-                    MPI_Send(&N, 1, MPI_INT, k, 0, MPI_COMM_WORLD);
-                }
+            
+            //collettive comunication to all other processes of important datas
+            MPI_Bcast(pat, 20, MPI_CHAR, 0, MPI_COMM_WORLD);
+            MPI_Bcast(&M, 1, MPI_INT, 0, MPI_COMM_WORLD);
+            MPI_Bcast(&lps, 20, MPI_INT, 0, MPI_COMM_WORLD);
+            MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
             int indexes[N];
             int x_indexes = 0;
             int i = 0;
-            int end = newN;
-            int j = 0; // index for pat[]
+            int end = N/cores+M;
+            j = 0; // index for pat[]
             while (i < end)
             {
                 if (pat[j] == txt[i])
@@ -195,11 +194,15 @@ int main(int argc, char *argv[])
                     MPI_Recv(&foundValue, 1, MPI_INT, k, 0, MPI_COMM_WORLD, NULL);
                 }
             }
-            t2 = MPI_Wtime();
+
+            if(k==argc-1)
+            {
+                t2 = MPI_Wtime();
+            }
             //PRINTS INDEXES
             for(int k = 0; k<x_indexes; k++)
             {
-                //printf("%d\n", indexes[k]);
+                printf("%d\n", indexes[k]);
             }
             
         }
@@ -211,28 +214,30 @@ int main(int argc, char *argv[])
     {
         for(int k = 1; k<argc; k++)
         {
-            char pat[20];
-            int local_M, local_N;
-            int local_lps[local_M];
-            //RECEIVE LSP, LSP_LENGTH AND STRING LENGTH
-            MPI_Recv(&pat, 20, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            MPI_Recv(&local_M, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            MPI_Recv(&local_lps, local_M, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            MPI_Recv(&local_N, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            int start = (local_N/cores)*core_number;
-            int end, i;
+            
+            //collettive comunication to all other processes of important datas
+            MPI_Bcast(pat, 20, MPI_CHAR, 0, MPI_COMM_WORLD);
+            MPI_Bcast(&M, 1, MPI_INT, 0, MPI_COMM_WORLD);
+            MPI_Bcast(&lps, 20, MPI_INT, 0, MPI_COMM_WORLD);
+            MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+            //find starting index
+            start = (N/cores)*core_number;
+            
+            //find final index
             if(core_number==cores-1)
             {
                 //IF LAST CORE IT COMPUTES UNTIL THE END
-                end = local_N;
+                end = N;
             }
             else
             {
-                end = (local_N/cores)*(core_number+1)+local_M;
+                end = (N/cores)*(core_number+1)+M;
             }
+
             int next_target;
             i = start; // index for txt[]
-            int j = 0; // index for pat[]
+            j = 0; // index for pat[]
             while (i < end)
             {
                 if (pat[j] == txt[i])
@@ -241,12 +246,12 @@ int main(int argc, char *argv[])
                     i++;
                 }
 
-                if (j == local_M) 
+                if (j == M) 
                 {
                     next_target = i-j;
                     //POSITIVE INDEXES ARE SENT FROM HERE
                     MPI_Send(&next_target, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-                    j = local_lps[j - 1];
+                    j = lps[j - 1];
                 }
 
                 // mismatch after j matches
@@ -254,7 +259,7 @@ int main(int argc, char *argv[])
                 {
                     if (j != 0)
                     {
-                        j = local_lps[j - 1];
+                        j = lps[j - 1];
                     }
                     else
                     {
